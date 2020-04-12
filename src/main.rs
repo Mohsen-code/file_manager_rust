@@ -1,90 +1,205 @@
 use std::io;
+use std::path::Path;
+// use std::fs::{self, File};
 use pwhash::bcrypt;
-use serde_json::Value as JsonValue;
+use std::io::prelude::*;
+// use serde_json::Value as JsonValue;
 
 mod user;
-use crate::user::user::User;
+use user::user::User;
 
 fn main() {
-    let user =  User::new(
-        String::from("Mohsen"),
-        String::from("Coder"),
-        String::from("test@gmail.com"),
-        bcrypt::hash(String::from("kdjsf@fjh")).unwrap()
+    let mut current_user: User = User::new(
+        String::from(""),
+        String::from(""),
+        String::from(""),
+        String::from(""),
     );
+    let mut user_is_login = false;
 
+    loop {
+        main_menu();
+        let num = get_number_input("please enter a number: ");
+        if num >= 3 {
+            continue;
+        } else {
+            if num == 1 {
+                let firts_name = get_string_input("Enter your first name: ");
+                let last_name = get_string_input("Enter your last name: ");
+                let email = get_string_input("Enter your email: ");
+                let password = get_string_input("Enter a password: ");
 
+                current_user = User::new(
+                    firts_name,
+                    last_name,
+                    email,
+                    bcrypt::hash(password).unwrap(),
+                );
 
-    /*let json_str = r#"
-        {
-            "name": "Mohsen",
-            "age": 23,
-            "is_maile": true
+                if !Path::new("users.txt").is_file() {
+                    let mut file = std::fs::File::create("users.txt").unwrap();
+                    file.write_all(serde_json::to_string(&current_user).unwrap().as_bytes())
+                        .unwrap();
+                }
+                user_is_login = true;
+                break;
+            } else if num == 2 {
+                let users_path = Path::new("users.txt");
+                if users_path.is_file() {
+                    let username = get_string_input("Enter your email: ");
+                    let password = get_string_input("Enter your password: ");
+                    let file = std::fs::read_to_string("users.txt").unwrap();
+                    let res: User = serde_json::from_str(&file).unwrap();
+                    if *res.get_user_name() == username
+                        && bcrypt::verify(&password, res.get_password())
+                    {
+                        println!("***( Welcome )***");
+                        current_user = res;
+                        user_is_login = true;
+                        break;
+                    }
+                }
+            } else if num == 0 {
+                break;
+            }
+
+            while user_is_login {
+                user_menu();
+                let num = get_number_input("Choose an option: ");
+                if num > 10 {
+                    continue;
+                } else {
+                    if num == 1 {
+                        let dir_name = get_string_input("Enter Directory Name: ");
+                        match current_user.create_directory(&dir_name) {
+                            Ok(()) => (),
+                            Err(err) => {
+                                println!("{}", err);
+                                continue
+                            }
+                        }
+                    }else if num == 2 {
+                        let dir_name = get_string_input("Enter Directory Name: ");
+                        match current_user.read_dir_content(&dir_name) {
+                            Ok(()) => (),
+                            Err(err) => {
+                                println!("{}", err);
+                                continue
+                            }
+                        }
+                    }else if num == 3 {
+                        let old_dir_name = get_string_input("Enter Directory Name: ");
+                        let new_dir_name = get_string_input("Enter New Name: ");
+                        match current_user.rename_file(&old_dir_name, &new_dir_name, false) {
+                            Ok(()) => (),
+                            Err(err) => {
+                                println!("{}", err);
+                                continue
+                            }
+                        }
+                    }else if num == 4 {
+                        let dir_name = get_string_input("Enter Directory Name: ");
+                        match current_user.remove_directory(&dir_name){
+                            Ok(()) => (),
+                            Err(err) => {
+                                println!("{}", err);
+                                continue
+                            }
+                        }
+                    }else if num == 5 {
+                        let file_name = get_string_input("Enter File Name: ");
+                        let file_content = get_string_input("Enter File Content: ");
+                        match current_user.create_new_file(&file_name, &file_content){
+                            Ok(()) => (),
+                            Err(err) => {
+                                println!("{}", err);
+                                continue
+                            }
+                        }
+                    }else if num == 6 {
+                        let file_name = get_string_input("Enter File Name: ");
+                        match current_user.remove_file(&file_name){
+                            Ok(()) => (),
+                            Err(err) => {
+                                println!("{}", err);
+                                continue
+                            }
+                        }
+                    }else if num == 7 {
+                        let old_file_name = get_string_input("Enter File Name: ");
+                        let new_file_name = get_string_input("Enter New Name: ");
+                        match current_user.rename_file(&old_file_name, &new_file_name, true){
+                            Ok(()) => (),
+                            Err(err) => {
+                                println!("{}", err);
+                                continue
+                            }
+                        }
+                    }else if num == 8 {
+                        let file_name = get_string_input("Enter File Name: ");
+                        let file_content = get_string_input("Enter File Content: ");
+                        match current_user.write_file(&file_name, &file_content){
+                            Ok(()) => (),
+                            Err(err) => {
+                                println!("{}", err);
+                                continue
+                            }
+                        }
+                    }else if num == 9 {
+                        let file_name = get_string_input("Enter File Name: ");
+                        match current_user.read_file(&file_name){
+                            Ok(()) => (),
+                            Err(err) => {
+                                println!("{}", err);
+                                continue
+                            }
+                        }
+                    }else if num == 10 {
+                        let main_file_name = get_string_input("Enter Main File Name: ");
+                        let copy_file_name = get_string_input("Enter Copy File Name: ");
+                        match current_user.copy_file(&main_file_name, &copy_file_name){
+                            Ok(()) => (),
+                            Err(err) => {
+                                println!("{}", err);
+                                continue
+                            }
+                        }
+                    }else if num == 0 {
+                        println!("Goodbye :D");
+                        break;
+                    }
+                }
+            }
         }
-    "#;
-
-    let res = serde_json::from_str(json_str);
-
-    if res.is_ok() {
-        let p: JsonValue = res.unwrap();
-        println!("The name is {}", p["name"].as_str().unwrap());
-    }else{
-        println!("Sorry! Could not parse JSON");
-    }*/
-
-//    serde_json::
-    /*if let std::io::Result::Err(e) = user.create_new_file("test.txt", "Mohsen I love you, You are my hurt beat."){
-        eprintln!("{}", e);
-    }*/
-
-    /*if let std::io::Result::Err(e) = user.read_file("ehsgam_farah.txt"){
-        eprintln!("{}", e);
-    }*/
-
-    /*if let std::io::Result::Err(e) = user.write_file("test2.txt", "lll"){
-        eprintln!("{}", e);
-    }*/
-
-    /*if let std::io::Result::Err(e) = user.create_directory("test"){
-        eprintln!("{}", e);
-    }*/
-
-    /*if let std::io::Result::Err(e) = user.remove_directory("test"){
-        eprintln!("{}", e);
-    }*/
-
-    /*if let std::io::Result::Err(e) = user.remove_file("ehsgam_farah.txt"){
-        eprintln!("{}", e);
-    }*/
-
-    if let std::io::Result::Err(e) = user.read_dir_content(""){
-        eprintln!("{}", e);
     }
-
-    /*match user.create_new_file("hello_2.txt") {
-        Ok(x) => println!("File created successfully!"),
-        Err(err_message) => println!("{}", err_message)
-    }*/
-
-//    main_menu();
-
-//    let _num = get_number_input("please enter a number: ");
-
-//    let s = get_string_input("Please enter your name: ");
-//    println!("the string is => {}", s);
-
-//    let digest = md5::compute(b"Hello World");
-//    let digest = format!("{:x}", digest);
-
-//    println!("{}", format!("{}/{}", "kos", "mos"));
 }
 
 fn main_menu() {
-    println!(r#"
+    println!(
+        r#"
 1- Register
 2- Login
 0- Exit
-    "#);
+    "#
+    );
+}
+
+fn user_menu() {
+    println!(
+        r#"
+1- Create Directory
+2- Read Directory Contents
+3- Rename Directory
+4- Remove Directory
+5- Create New File
+6- Remove File
+7- Rename File
+8- Write File
+9- Read File
+10- Copy File
+0- Exit
+    "#
+    );
 }
 
 fn get_number_input(s: &str) -> u32 {
