@@ -60,7 +60,7 @@ fn main() {
             } else if num == 0 {
                 break;
             }
-            println!("user_is_login ==>  {}", user_is_login);
+            
             while user_is_login {
                 user_menu();
                 let num = get_number_input("Choose an option: ");
