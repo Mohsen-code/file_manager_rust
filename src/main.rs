@@ -15,7 +15,7 @@ fn main() {
         String::from(""),
         String::from(""),
     );
-    let mut user_is_login = false;
+    let mut user_is_login: bool = false;
 
     loop {
         main_menu();
@@ -42,7 +42,6 @@ fn main() {
                         .unwrap();
                 }
                 user_is_login = true;
-                break;
             } else if num == 2 {
                 let users_path = Path::new("users.txt");
                 if users_path.is_file() {
@@ -56,13 +55,12 @@ fn main() {
                         println!("***( Welcome )***");
                         current_user = res;
                         user_is_login = true;
-                        break;
                     }
                 }
             } else if num == 0 {
                 break;
             }
-
+            println!("user_is_login ==>  {}", user_is_login);
             while user_is_login {
                 user_menu();
                 let num = get_number_input("Choose an option: ");

@@ -29,9 +29,6 @@ pub mod user {
                 email,
                 password,
             };
-            if Path::new("users.txt").is_file() {
-                fs::remove_file("users.txt").unwrap();
-            }
             if !Path::new(&dir_name).is_dir() {
                 fs::create_dir(&dir_name).unwrap();
             }
